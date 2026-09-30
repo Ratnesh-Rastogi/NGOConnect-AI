@@ -1,0 +1,695 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: NGOConnect AI resource coordination API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: dashboard
+  - name: resources
+  - name: requests
+  - name: transactions
+  - name: notifications
+  - name: recommendations
+  - name: admin
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logged out
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Role-specific dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /resources:
+    get:
+      operationId: listResources
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Category"
+        - $ref: "#/components/parameters/Location"
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated resource listings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourcePage"
+    post:
+      operationId: createResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceInput"
+      responses:
+        "201":
+          description: Created resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+  /resources/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+    patch:
+      operationId: updateResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResourceUpdate"
+      responses:
+        "200":
+          description: Updated resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resource"
+    delete:
+      operationId: deleteResource
+      tags: [resources]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Deleted resource
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [incoming, outgoing, all]
+            default: all
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated request list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestPage"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestInput"
+      responses:
+        "201":
+          description: Created request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRequest"
+  /requests/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getRequest
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRequest"
+  /requests/{id}/accept:
+    post:
+      operationId: acceptRequest
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Accepted request and transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+  /requests/{id}/reject:
+    post:
+      operationId: rejectRequest
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Rejected request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRequest"
+  /requests/{id}/complete:
+    post:
+      operationId: completeRequest
+      tags: [requests]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Completed transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Status"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionPage"
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+  /recommendations:
+    get:
+      operationId: listRecommendations
+      tags: [recommendations]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Transparent resource matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+  /admin/ngos:
+    get:
+      operationId: listNgos
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: NGO directory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ngo"
+  /admin/ngos/{id}/verify:
+    post:
+      operationId: verifyNgo
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationInput"
+      responses:
+        "200":
+          description: Updated NGO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ngo"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        name: { type: string }
+        role:
+          type: string
+          enum: [ngo, donor, admin]
+        ngoId: { type: ["integer", "null"] }
+    RegisterInput:
+      type: object
+      required: [email, password, name, role]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        name: { type: string, minLength: 2 }
+        role:
+          type: string
+          enum: [ngo, donor]
+        ngoName: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token: { type: string }
+        user: { $ref: "#/components/schemas/User" }
+    Ngo:
+      type: object
+      required: [id, name, location, description, verificationStatus, trustScore]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        contactEmail: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        location: { type: string }
+        description: { type: string }
+        verificationStatus:
+          type: string
+          enum: [pending, verified, rejected]
+        trustScore: { type: number }
+    Resource:
+      type: object
+      required: [id, ownerNgoId, ownerNgoName, name, category, quantity, unit, location, status, createdAt]
+      properties:
+        id: { type: integer }
+        ownerNgoId: { type: integer }
+        ownerNgoName: { type: string }
+        name: { type: string }
+        category:
+          type: string
+          enum: [food, medicines, healthcare_supplies, clothing, other]
+        description: { type: string }
+        quantity: { type: number }
+        unit: { type: string }
+        location: { type: string }
+        expiryDate: { type: ["string", "null"], format: date }
+        status:
+          type: string
+          enum: [available, reserved, depleted, expired]
+        createdAt: { type: string, format: date-time }
+    ResourceInput:
+      type: object
+      required: [name, category, quantity, unit, location]
+      properties:
+        name: { type: string, minLength: 2 }
+        category:
+          type: string
+          enum: [food, medicines, healthcare_supplies, clothing, other]
+        description: { type: string }
+        quantity: { type: number, exclusiveMinimum: 0 }
+        unit: { type: string, minLength: 1 }
+        location: { type: string, minLength: 2 }
+        expiryDate: { type: ["string", "null"], format: date }
+    ResourceUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 2 }
+        category:
+          type: string
+          enum: [food, medicines, healthcare_supplies, clothing, other]
+        description: { type: string }
+        quantity: { type: number, exclusiveMinimum: 0 }
+        unit: { type: string, minLength: 1 }
+        location: { type: string, minLength: 2 }
+        expiryDate: { type: ["string", "null"], format: date }
+        status:
+          type: string
+          enum: [available, reserved, depleted, expired]
+    ResourceRequest:
+      type: object
+      required: [id, requesterNgoId, requesterNgoName, resourceType, quantity, urgency, location, requiredDate, status, createdAt]
+      properties:
+        id: { type: integer }
+        requesterNgoId: { type: integer }
+        requesterNgoName: { type: string }
+        resourceType: { type: string }
+        category:
+          type: string
+          enum: [food, medicines, healthcare_supplies, clothing, other]
+        quantity: { type: number }
+        urgency:
+          type: string
+          enum: [low, medium, high, critical]
+        location: { type: string }
+        requiredDate: { type: string, format: date }
+        status:
+          type: string
+          enum: [open, accepted, rejected, completed, cancelled]
+        createdAt: { type: string, format: date-time }
+    RequestInput:
+      type: object
+      required: [resourceType, quantity, urgency, location, requiredDate]
+      properties:
+        resourceType: { type: string, minLength: 2 }
+        category:
+          type: string
+          enum: [food, medicines, healthcare_supplies, clothing, other]
+        quantity: { type: number, exclusiveMinimum: 0 }
+        urgency:
+          type: string
+          enum: [low, medium, high, critical]
+        location: { type: string, minLength: 2 }
+        requiredDate: { type: string, format: date }
+    Transaction:
+      type: object
+      required: [id, requestId, resourceId, quantity, status, createdAt]
+      properties:
+        id: { type: integer }
+        requestId: { type: integer }
+        resourceId: { type: integer }
+        quantity: { type: number }
+        status:
+          type: string
+          enum: [pending, accepted, completed, cancelled]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Notification:
+      type: object
+      required: [id, title, message, type, read, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        type:
+          type: string
+          enum: [request_created, request_accepted, request_rejected, transaction_completed, system]
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    Recommendation:
+      type: object
+      required: [resource, request, score, reasons]
+      properties:
+        resource: { $ref: "#/components/schemas/Resource" }
+        request: { $ref: "#/components/schemas/ResourceRequest" }
+        score: { type: number }
+        reasons:
+          type: array
+          items: { type: string }
+    Dashboard:
+      type: object
+      required: [role, counts, recentResources, recentRequests, recentTransactions, unreadNotifications]
+      properties:
+        role: { type: string }
+        counts:
+          type: object
+          additionalProperties: { type: integer }
+        recentResources:
+          type: array
+          items: { $ref: "#/components/schemas/Resource" }
+        recentRequests:
+          type: array
+          items: { $ref: "#/components/schemas/ResourceRequest" }
+        recentTransactions:
+          type: array
+          items: { $ref: "#/components/schemas/Transaction" }
+        unreadNotifications: { type: integer }
+    AdminStats:
+      type: object
+      required: [users, ngos, verifiedNgos, resources, openRequests, activeTransactions]
+      properties:
+        users: { type: integer }
+        ngos: { type: integer }
+        verifiedNgos: { type: integer }
+        resources: { type: integer }
+        openRequests: { type: integer }
+        activeTransactions: { type: integer }
+    VerificationInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, verified, rejected]
+    ResourcePage:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Resource" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+    RequestPage:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/ResourceRequest" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+    TransactionPage:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Transaction" }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Search:
+      name: search
+      in: query
+      schema: { type: string }
+    Category:
+      name: category
+      in: query
+      schema:
+        type: string
+        enum: [food, medicines, healthcare_supplies, clothing, other]
+    Location:
+      name: location
+      in: query
+      schema: { type: string }
+    Status:
+      name: status
+      in: query
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
