@@ -439,6 +439,15 @@ components:
           enum: [ngo, donor]
         ngoName: { type: ["string", "null"] }
         phone: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        state: { type: ["string", "null"] }
+        city: { type: ["string", "null"] }
+        pincode: { type: ["string", "null"] }
+        registrationNumber: { type: ["string", "null"] }
+        panTaxId: { type: ["string", "null"] }
+        legalDescription: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
+        taxExemptionDetails: { type: ["string", "null"] }
     LoginInput:
       type: object
       required: [email, password]
@@ -453,7 +462,8 @@ components:
         user: { $ref: "#/components/schemas/User" }
     Ngo:
       type: object
-      required: [id, name, location, description, verificationStatus, trustScore]
+      required: [id, name, location, description, verificationStatus, trustScore,
+                 address, state, city, pincode, registrationNumber, panTaxId, legalDescription]
       properties:
         id: { type: integer }
         name: { type: string }
@@ -465,6 +475,20 @@ components:
           type: string
           enum: [pending, verified, rejected]
         trustScore: { type: number }
+        address: { type: string }
+        state: { type: string }
+        city: { type: string }
+        pincode: { type: string }
+        registrationNumber: { type: string }
+        panTaxId: { type: string }
+        legalDescription: { type: string }
+        website: { type: ["string", "null"] }
+        taxExemptionDetails: { type: ["string", "null"] }
+        verifiedAt: { type: ["string", "null"], format: date-time }
+        verifiedBy: { type: ["integer", "null"] }
+        verifierName: { type: ["string", "null"] }
+        rejectionReason: { type: ["string", "null"] }
+        adminNotes: { type: ["string", "null"] }
     Resource:
       type: object
       required: [id, ownerNgoId, ownerNgoName, name, category, quantity, unit, location, status, createdAt]
@@ -601,6 +625,10 @@ components:
           type: array
           items: { $ref: "#/components/schemas/Transaction" }
         unreadNotifications: { type: integer }
+        ngoProfile:
+          oneOf:
+            - $ref: "#/components/schemas/Ngo"
+            - type: "null"
     AdminStats:
       type: object
       required: [users, ngos, verifiedNgos, resources, openRequests, activeTransactions]
@@ -618,6 +646,8 @@ components:
         status:
           type: string
           enum: [pending, verified, rejected]
+        rejectionReason: { type: ["string", "null"] }
+        adminNotes: { type: ["string", "null"] }
     ResourcePage:
       type: object
       required: [items, page, pageSize, total]

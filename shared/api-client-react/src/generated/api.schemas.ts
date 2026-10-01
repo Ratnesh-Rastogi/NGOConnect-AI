@@ -50,6 +50,24 @@ export interface RegisterInput {
   ngoName?: string | null;
   /** @nullable */
   phone?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  pincode?: string | null;
+  /** @nullable */
+  registrationNumber?: string | null;
+  /** @nullable */
+  panTaxId?: string | null;
+  /** @nullable */
+  legalDescription?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  taxExemptionDetails?: string | null;
 }
 
 export interface LoginInput {
@@ -83,6 +101,27 @@ export interface Ngo {
   description: string;
   verificationStatus: NgoVerificationStatus;
   trustScore: number;
+  address: string;
+  state: string;
+  city: string;
+  pincode: string;
+  registrationNumber: string;
+  panTaxId: string;
+  legalDescription: string;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  taxExemptionDetails?: string | null;
+  /** @nullable */
+  verifiedAt?: string | null;
+  /** @nullable */
+  verifiedBy?: number | null;
+  /** @nullable */
+  verifierName?: string | null;
+  /** @nullable */
+  rejectionReason?: string | null;
+  /** @nullable */
+  adminNotes?: string | null;
 }
 
 export type ResourceCategory = typeof ResourceCategory[keyof typeof ResourceCategory];
@@ -320,6 +359,8 @@ export interface Dashboard {
   recentRequests: ResourceRequest[];
   recentTransactions: Transaction[];
   unreadNotifications: number;
+  /** @nullable */
+  ngoProfile?: Ngo | null;
 }
 
 export interface AdminStats {
@@ -342,6 +383,10 @@ export const VerificationInputStatus = {
 
 export interface VerificationInput {
   status: VerificationInputStatus;
+  /** @nullable */
+  rejectionReason?: string | null;
+  /** @nullable */
+  adminNotes?: string | null;
 }
 
 export interface ResourcePage {

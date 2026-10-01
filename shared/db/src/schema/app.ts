@@ -1,4 +1,5 @@
 import {
+  AnyPgColumn,
   boolean,
   date,
   integer,
@@ -73,6 +74,24 @@ export const ngosTable = pgTable(
       .notNull()
       .default("pending"),
     trustScore: real("trust_score").notNull().default(40),
+    // Organisational detail (required semantically, default '' for backward compat)
+    address: text("address").notNull().default(""),
+    state: text("state").notNull().default(""),
+    city: text("city").notNull().default(""),
+    pincode: text("pincode").notNull().default(""),
+    registrationNumber: text("registration_number").notNull().default(""),
+    panTaxId: text("pan_tax_id").notNull().default(""),
+    legalDescription: text("legal_description").notNull().default(""),
+    // Optional organisational detail
+    website: text("website"),
+    taxExemptionDetails: text("tax_exemption_details"),
+    // Verification metadata (all nullable)
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verifiedBy: integer("verified_by").references((): AnyPgColumn => usersTable.id, {
+      onDelete: "set null",
+    }),
+    rejectionReason: text("rejection_reason"),
+    adminNotes: text("admin_notes"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -95,7 +114,7 @@ export const usersTable = pgTable(
     passwordHash: text("password_hash").notNull(),
     name: text("name").notNull(),
     role: userRoleEnum("role").notNull(),
-    ngoId: integer("ngo_id").references(() => ngosTable.id, {
+    ngoId: integer("ngo_id").references((): AnyPgColumn => ngosTable.id, {
       onDelete: "set null",
     }),
     phone: text("phone"),

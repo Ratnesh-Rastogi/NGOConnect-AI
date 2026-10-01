@@ -29,7 +29,16 @@ export const RegisterBody = zod.object({
   "name": zod.string().min(registerBodyNameMin),
   "role": zod.enum(['ngo', 'donor']),
   "ngoName": zod.string().nullish(),
-  "phone": zod.string().nullish()
+  "phone": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "pincode": zod.string().nullish(),
+  "registrationNumber": zod.string().nullish(),
+  "panTaxId": zod.string().nullish(),
+  "legalDescription": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "taxExemptionDetails": zod.string().nullish()
 })
 
 export const RegisterResponse = zod.object({
@@ -115,7 +124,31 @@ export const GetDashboardResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date().optional()
 })),
-  "unreadNotifications": zod.number().int()
+  "unreadNotifications": zod.number().int(),
+  "ngoProfile": zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "contactEmail": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "location": zod.string(),
+  "description": zod.string(),
+  "verificationStatus": zod.enum(['pending', 'verified', 'rejected']),
+  "trustScore": zod.number(),
+  "address": zod.string(),
+  "state": zod.string(),
+  "city": zod.string(),
+  "pincode": zod.string(),
+  "registrationNumber": zod.string(),
+  "panTaxId": zod.string(),
+  "legalDescription": zod.string(),
+  "website": zod.string().nullish(),
+  "taxExemptionDetails": zod.string().nullish(),
+  "verifiedAt": zod.coerce.date().nullish(),
+  "verifiedBy": zod.number().int().nullish(),
+  "verifierName": zod.string().nullish(),
+  "rejectionReason": zod.string().nullish(),
+  "adminNotes": zod.string().nullish()
+}).nullish()
 })
 
 
@@ -505,7 +538,21 @@ export const ListNgosResponseItem = zod.object({
   "location": zod.string(),
   "description": zod.string(),
   "verificationStatus": zod.enum(['pending', 'verified', 'rejected']),
-  "trustScore": zod.number()
+  "trustScore": zod.number(),
+  "address": zod.string(),
+  "state": zod.string(),
+  "city": zod.string(),
+  "pincode": zod.string(),
+  "registrationNumber": zod.string(),
+  "panTaxId": zod.string(),
+  "legalDescription": zod.string(),
+  "website": zod.string().nullish(),
+  "taxExemptionDetails": zod.string().nullish(),
+  "verifiedAt": zod.coerce.date().nullish(),
+  "verifiedBy": zod.number().int().nullish(),
+  "verifierName": zod.string().nullish(),
+  "rejectionReason": zod.string().nullish(),
+  "adminNotes": zod.string().nullish()
 })
 export const ListNgosResponse = zod.array(ListNgosResponseItem)
 
@@ -515,7 +562,9 @@ export const VerifyNgoParams = zod.object({
 })
 
 export const VerifyNgoBody = zod.object({
-  "status": zod.enum(['pending', 'verified', 'rejected'])
+  "status": zod.enum(['pending', 'verified', 'rejected']),
+  "rejectionReason": zod.string().nullish(),
+  "adminNotes": zod.string().nullish()
 })
 
 export const VerifyNgoResponse = zod.object({
@@ -526,7 +575,21 @@ export const VerifyNgoResponse = zod.object({
   "location": zod.string(),
   "description": zod.string(),
   "verificationStatus": zod.enum(['pending', 'verified', 'rejected']),
-  "trustScore": zod.number()
+  "trustScore": zod.number(),
+  "address": zod.string(),
+  "state": zod.string(),
+  "city": zod.string(),
+  "pincode": zod.string(),
+  "registrationNumber": zod.string(),
+  "panTaxId": zod.string(),
+  "legalDescription": zod.string(),
+  "website": zod.string().nullish(),
+  "taxExemptionDetails": zod.string().nullish(),
+  "verifiedAt": zod.coerce.date().nullish(),
+  "verifiedBy": zod.number().int().nullish(),
+  "verifierName": zod.string().nullish(),
+  "rejectionReason": zod.string().nullish(),
+  "adminNotes": zod.string().nullish()
 })
 
 
