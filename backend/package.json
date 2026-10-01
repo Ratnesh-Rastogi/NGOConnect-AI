@@ -4,11 +4,11 @@
     "private":  true,
     "type":  "module",
     "scripts":  {
-                    "dev":  "tsx watch src/index.ts",
+                    "dev":  "tsx watch --env-file ../.env src/index.ts",
                     "build":  "node ./build.mjs",
                     "start":  "node --enable-source-maps ./dist/index.mjs",
-                    "seed":  "tsx src/seed.ts",
-                    "test":  "tsx --test src/smoke.test.ts",
+                    "seed":  "tsx --env-file ../.env src/seed.ts",
+                    "test":  "tsx --env-file ../.env --test src/smoke.test.ts",
                     "typecheck":  "tsc -p tsconfig.json --noEmit"
                 },
     "dependencies":  {
