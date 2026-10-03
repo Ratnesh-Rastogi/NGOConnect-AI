@@ -1,4 +1,4 @@
-import {
+﻿import {
   Router,
   and,
   asc,
@@ -73,6 +73,7 @@ import {
   transactionView,
   notify,
 } from "./route-common";
+import { alias } from "drizzle-orm/pg-core";
 
 const router = Router();
 
@@ -93,18 +94,53 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
+  // For NGO registrations, validate the 7 required organisational fields before
+  // hashing the password or writing anything to the database.
+  if (data.role === "ngo") {
+    const ngoRequired: Record<string, string> = {
+      address:            String(req.body.address            ?? "").trim(),
+      state:              String(req.body.state              ?? "").trim(),
+      city:               String(req.body.city               ?? "").trim(),
+      pincode:            String(req.body.pincode            ?? "").trim(),
+      registrationNumber: String(req.body.registrationNumber ?? "").trim(),
+      panTaxId:           String(req.body.panTaxId           ?? "").trim(),
+      legalDescription:   String(req.body.legalDescription   ?? "").trim(),
+    };
+    const missing = Object.entries(ngoRequired)
+      .filter(([, v]) => v === "")
+      .map(([k]) => k);
+    if (missing.length > 0) {
+      error(res, 400, `Missing required NGO fields: ${missing.join(", ")}`);
+      return;
+    }
+  }
+
   const passwordHash = await hashPassword(data.password);
   const result = await db.transaction(async (tx) => {
     let ngoId: number | null = null;
     if (data.role === "ngo") {
+      const address            = String(req.body.address            ?? "").trim();
+      const state              = String(req.body.state              ?? "").trim();
+      const city               = String(req.body.city               ?? "").trim();
+      const pincode            = String(req.body.pincode            ?? "").trim();
+      const registrationNumber = String(req.body.registrationNumber ?? "").trim();
+      const panTaxId           = String(req.body.panTaxId           ?? "").trim();
+      const legalDescription   = String(req.body.legalDescription   ?? "").trim();
       const [ngo] = await tx
         .insert(ngosTable)
         .values({
           name: data.ngoName?.trim() || data.name.trim(),
           contactEmail: email,
           phone: data.phone ?? null,
-          location: "Location to be confirmed",
+          location: city ? `${city}, ${state}` : "Location to be confirmed",
           description: "New NGO profile awaiting verification.",
+          address,
+          state,
+          city,
+          pincode,
+          registrationNumber,
+          panTaxId,
+          legalDescription,
         })
         .returning({ id: ngosTable.id });
       ngoId = ngo.id;
@@ -161,6 +197,40 @@ router.get("/auth/me", authenticate, async (req, res): Promise<void> => {
     error(res, 401, "User account no longer exists");
     return;
   }
+
+  if (user.role === "ngo" && user.ngoId != null) {
+    const verifierAlias = alias(usersTable, "verifier");
+    const [row] = await db
+      .select({
+        id:                   ngosTable.id,
+        name:                 ngosTable.name,
+        contactEmail:         ngosTable.contactEmail,
+        phone:                ngosTable.phone,
+        address:              ngosTable.address,
+        state:                ngosTable.state,
+        city:                 ngosTable.city,
+        pincode:              ngosTable.pincode,
+        registrationNumber:   ngosTable.registrationNumber,
+        panTaxId:             ngosTable.panTaxId,
+        legalDescription:     ngosTable.legalDescription,
+        website:              ngosTable.website,
+        taxExemptionDetails:  ngosTable.taxExemptionDetails,
+        verificationStatus:   ngosTable.verificationStatus,
+        trustScore:           ngosTable.trustScore,
+        verifiedAt:           ngosTable.verifiedAt,
+        verifiedBy:           ngosTable.verifiedBy,
+        verifierName:         verifierAlias.name,
+        rejectionReason:      ngosTable.rejectionReason,
+        adminNotes:           ngosTable.adminNotes,
+      })
+      .from(ngosTable)
+      .leftJoin(verifierAlias, eq(verifierAlias.id, ngosTable.verifiedBy))
+      .where(eq(ngosTable.id, user.ngoId));
+
+    res.json({ ...publicUser(user), ngo: row ?? null });
+    return;
+  }
+
   res.json(GetMeResponse.parse(publicUser(user)));
 });
 
