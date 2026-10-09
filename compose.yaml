@@ -1,0 +1,75 @@
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ngoconnect
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ngoconnect-db-data:/var/lib/postgresql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ngoconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  setup:
+    image: ngo-connect-ai:dev
+    restart: "no"
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/ngoconnect
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: development
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./shared:/app/shared
+      - ./scripts:/app/scripts
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["node", "scripts/setup-docker.js"]
+
+  backend:
+    image: ngo-connect-ai:dev
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/ngoconnect
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: development
+      PORT: 3000
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./shared:/app/shared
+    ports:
+      - "3000:3000"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    command: ["node", "--watch", "backend/src/index.js"]
+
+  frontend:
+    image: ngo-connect-ai:dev
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:3000
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./shared:/app/shared
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_started
+    command: ["npm", "run", "dev", "--workspace=frontend"]
+
+volumes:
+  ngoconnect-db-data:

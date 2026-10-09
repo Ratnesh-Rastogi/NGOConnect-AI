@@ -1,0 +1,17 @@
+node_modules/
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+.env.docker
+dist/
+build/
+coverage/
+.kiro/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

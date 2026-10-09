@@ -1,0 +1,9 @@
+{
+  "name": "@ngoconnect/api-spec",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {},
+  "devDependencies": {
+    "orval": "^8.30.0"
+  }
+}

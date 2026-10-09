@@ -1,0 +1,24 @@
+{
+  "name": "ngo-connect-ai",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspaces --if-present",
+    "setup": "node scripts/setup.js",
+    "seed": "npm run seed --workspace=ngo-connect-api",
+    "dev": "node scripts/dev-docker.js",
+    "docker:build": "docker build -t ngo-connect-ai:dev .",
+    "db:migrate": "npm run migrate --workspace=@ngoconnect/db"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  },
+  "type": "module"
+}

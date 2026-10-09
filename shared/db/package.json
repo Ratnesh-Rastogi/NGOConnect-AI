@@ -1,0 +1,15 @@
+{
+  "name": "@ngoconnect/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "migrate": "node --env-file-if-exists=../../.env ./src/migrate.js"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
+  }
+}
