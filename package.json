@@ -15,7 +15,8 @@
     "seed": "npm run seed --workspace=ngo-connect-api",
     "dev": "node scripts/dev-docker.js",
     "docker:build": "docker build -t ngo-connect-ai:dev .",
-    "db:migrate": "npm run migrate --workspace=@ngoconnect/db"
+    "db:migrate": "npm run migrate --workspace=@ngoconnect/db",
+    "db:seed:docker": "node scripts/seed-docker.js"
   },
   "devDependencies": {
     "prettier": "^3.9.6"

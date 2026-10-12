@@ -1,15 +1,74 @@
 # NGOConnect AI
 
-NGOConnect AI is a full-stack resource coordination platform for NGOs and donors. It helps organizations manage surplus resources, create and fulfill requests, track transactions, receive notifications, and connect needs with suitable resources.
+A full-stack resource coordination platform that helps NGOs and donors coordinate surplus resources, manage requests, track transactions, and discover potential resource matches.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started with Docker](#getting-started-with-docker)
+- [Database Workflow](#database-workflow)
+- [Manual Local Setup](#manual-local-setup)
+- [Demo Accounts](#demo-accounts)
+- [Useful Commands](#useful-commands)
+- [Troubleshooting](#troubleshooting)
+- [Security Notes](#security-notes)
+
+## Overview
+
+NGOConnect AI is designed to improve coordination between NGOs and donors by providing a centralized platform for resource listings, resource requests, transactions, notifications, and administrative verification workflows.
+
+The application uses a React frontend, an Express backend, and PostgreSQL for persistent data storage. Docker Compose provides a consistent local development environment.
+
+## Features
+
+- **Authentication:** User registration, login, and JWT-based authentication.
+- **Resource Management:** Create and manage resource listings and availability.
+- **Request Management:** Submit and manage requests for resources.
+- **Transaction Tracking:** Track accepted requests and associated transactions.
+- **Recommended Matches:** Discover potential matches between resource requests and available resources.
+- **Notifications:** Receive notifications about relevant platform activity.
+- **NGO Verification:** Track NGO verification status through administrative workflows.
+- **Containerized Development:** Run the frontend, backend, and database using Docker Compose.
 
 ## Tech Stack
 
-- **Frontend:** React, Vite, JavaScript, JSX, Tailwind CSS
-- **Backend:** Node.js, Express.js, JavaScript, JWT, bcrypt
-- **Database:** PostgreSQL
-- **Database driver:** `pg` (node-postgres), using parameterized SQL
-- **API:** REST, OpenAPI, Zod, React Query
-- **Containers:** Docker and Docker Compose
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, JavaScript, JSX, Tailwind CSS |
+| Backend | Node.js, Express.js, JavaScript |
+| Authentication | JWT, bcrypt |
+| Database | PostgreSQL |
+| Database Access | `pg` (node-postgres), parameterized SQL |
+| API | REST, OpenAPI, Zod |
+| Data Fetching | React Query |
+| Development Environment | Docker, Docker Compose |
+| Package Management | npm workspaces |
+
+## Architecture
+
+```text
+                 React + Vite
+                 localhost:5173
+                       |
+                       | REST API
+                       v
+                Express Backend
+                 localhost:3000
+                       |
+                       | PostgreSQL
+                       v
+                PostgreSQL Database
+                 localhost:5433
+```
+
+The frontend communicates with the backend through REST API endpoints. The backend handles application logic, authentication, authorization, and database operations.
+
+The shared database package provides PostgreSQL connection and query helpers. SQL migrations maintain the database schema.
 
 ## Project Structure
 
@@ -18,60 +77,61 @@ NGOConnect-AI/
 ├── backend/
 │   └── src/
 │       ├── middleware/       # Authentication and authorization
-│       ├── routes/           # Feature-specific REST endpoints
-│       ├── utils/             # JWT, password hashing, logging
-│       ├── app.js             # Express app and middleware
-│       ├── index.js           # Backend entry point
-│       └── seed.js            # Idempotent demo data seeding
+│       ├── routes/           # API routes
+│       ├── utils/            # Shared backend utilities
+│       ├── app.js            # Express application
+│       ├── index.js          # Backend entry point
+│       └── seed.js           # Demo data seeding
 ├── frontend/
 │   └── src/
-│       ├── components/        # Shared UI pieces
-│       ├── hooks/             # Reusable React hooks
-│       ├── lib/               # Frontend utilities
-│       ├── pages/             # Application screens
+│       ├── components/       # Reusable UI components
+│       ├── hooks/            # Custom React hooks
+│       ├── lib/              # Frontend utilities
+│       ├── pages/            # Application pages
 │       ├── App.jsx
 │       └── main.jsx
 ├── shared/
-│   ├── api-client-react/      # Generated React API client
-│   ├── api-spec/             # OpenAPI definition
-│   ├── api-zod/              # Zod request/response validators
+│   ├── api-client-react/     # React API client
+│   ├── api-spec/             # OpenAPI specification
+│   ├── api-zod/              # Zod validators
 │   └── db/
-│       ├── schema.sql        # PostgreSQL tables, enums, indexes
-│       └── src/              # PostgreSQL connection/query helpers
+│       ├── schema.sql        # Database schema
+│       └── src/
+│           ├── index.js      # Database helpers
+│           └── migrate.js    # Schema migration entry point
 ├── scripts/
-│   ├── dev-docker.js
-│   ├── setup-docker.js
-│   └── setup.js
+│   ├── dev-docker.js         # Docker development launcher
+│   ├── setup-docker.js       # Docker database migration step
+│   ├── seed-docker.js        # Explicit Docker seeding command
+│   └── setup.js              # Local setup script
 ├── Dockerfile
 ├── compose.yaml
-├── .env.example
 ├── package.json
-└── package-lock.json
+├── package-lock.json
+└── .env.example
 ```
 
-## Requirements
+## Prerequisites
 
-For the simplest setup, install:
+For the recommended Docker setup, install:
 
-- Docker Desktop (Docker Engine and Docker Compose)
-- Node.js 22.18 or later
-- npm (included with Node.js)
-- Git
+- [Git](https://git-scm.com/)
+- [Node.js 22 or later](https://nodejs.org/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-You do **not** need to install PostgreSQL locally. Docker runs PostgreSQL for the project.
+npm is included with Node.js. PostgreSQL does not need to be installed locally when using Docker.
 
-Check the tools:
+Verify your installation:
 
 ```powershell
-docker --version
-docker compose version
+git --version
 node -v
 npm -v
+docker --version
+docker compose version
 ```
 
-## Recommended Setup: Docker
-
-Docker gives developers the same PostgreSQL and Node.js runtime environment. The setup service prepares the schema and seeds demo data automatically.
+## Getting Started with Docker
 
 ### 1. Clone the repository
 
@@ -80,180 +140,283 @@ git clone https://github.com/Ratnesh-Rastogi/NGOConnect-AI.git
 cd NGOConnect-AI
 ```
 
-### 2. Build the Docker image (first time, or after dependency/config changes)
+### 2. Build the development image
+
+Build the image before the first startup:
 
 ```powershell
-docker build -t ngo-connect-ai:dev .
+npm run docker:build
 ```
 
-### 3. Start everything
+Rebuild it when dependencies, the Dockerfile, or other image-build inputs change.
+
+### 3. Start the application
 
 ```powershell
 npm run dev
 ```
 
-On first startup, the helper creates `.env.docker` with random local-development secrets, then Docker Compose:
+The development launcher creates `.env.docker` with local development secrets if the file does not exist, then starts Docker Compose.
+
+The startup workflow:
 
 1. Starts PostgreSQL and waits for its health check.
-2. Creates or updates the database schema from `shared/db/schema.sql`.
-3. Inserts demo data (without duplicating existing seed records).
-4. Starts the Express backend.
-5. Starts the React/Vite frontend.
+2. Runs the database migration step.
+3. Starts the backend after the migration step succeeds.
+4. Starts the frontend.
 
-Open:
+**Demo data is not automatically seeded during normal startup.** Use the separate seeding command in the Database Workflow section when demo data is needed.
 
-- Frontend: <http://localhost:5173>
-- Backend health check: <http://localhost:3000/api/healthz>
-- PostgreSQL from the host, if needed: `localhost:5433`
+### 4. Open the application
 
-Keep the terminal running while you use the website. Press `Ctrl+C` to stop the attached services.
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend health check | http://localhost:3000/api/healthz |
+| PostgreSQL from the host | `localhost:5433` |
 
-### Normal daily development
+Keep the terminal running while using the application. Press `Ctrl+C` to stop the attached development session.
 
-After the image has been built, run only:
+### 5. Daily development
+
+After the image has been built, start the environment with:
 
 ```powershell
 npm run dev
 ```
 
-If `package.json`, `package-lock.json`, `Dockerfile`, or OS-level dependencies change, rebuild the image first:
+If you change dependencies or Docker image configuration, rebuild first:
 
 ```powershell
-docker build -t ngo-connect-ai:dev .
+npm run docker:build
 npm run dev
 ```
 
-### Stop/reset Docker services
+Source files mounted through Compose are available to the running development containers, so ordinary source changes generally do not require rebuilding the image.
 
-Stop containers but preserve the database volume:
+## Database Workflow
+
+NGOConnect AI separates schema migrations from demo data seeding.
+
+### Run migrations
+
+The Docker startup workflow runs the migration step automatically. To invoke the existing migration command directly in a compatible local environment, use:
+
+```powershell
+npm run db:migrate
+```
+
+The migration logic is located in `shared/db/src/migrate.js`, and the database schema is defined in `shared/db/schema.sql`.
+
+### Seed demo data in Docker
+
+To insert demo accounts and sample resources, requests, transactions, and notifications, run:
+
+```powershell
+npm run db:seed:docker
+```
+
+Run this command only when you want demo data. It uses the Docker database and does not require you to expose the database password in the command line.
+
+The seed script checks for existing records in several places, but repeated runs are not guaranteed to leave every record unchanged. In particular, sample transaction setup can affect resource quantities.
+
+### Stop the development containers
+
+To stop and remove the Compose containers while preserving the database volume:
 
 ```powershell
 docker compose --env-file .env.docker down
 ```
 
-Completely reset the local Docker database (this deletes its stored data):
+### Reset the local database
+
+**Warning: This permanently deletes the PostgreSQL data stored in the Compose-managed volumes.** Do not run this command if you need to preserve existing records.
 
 ```powershell
 docker compose --env-file .env.docker down -v
 ```
 
-The next `npm run dev` will recreate the schema and seed demo records.
+After a reset, run `npm run dev` to recreate the database schema. Run `npm run db:seed:docker` separately if you also want demo data.
 
-## Manual Local Setup (without Docker)
+## Manual Local Setup
 
-Use this only if you want to run PostgreSQL and Node.js directly on your machine.
+Use this workflow only when running the backend and frontend directly on your computer instead of through Docker.
 
-1. Install and start PostgreSQL; create a database named `ngoconnect`.
-2. Install project dependencies:
+### 1. Install PostgreSQL
+
+Install and start PostgreSQL, then create a database named `ngoconnect`.
+
+### 2. Install dependencies
+
+From the repository root:
 
 ```powershell
 npm ci
 ```
 
-3. Create your environment file:
+### 3. Configure environment variables
+
+Create a local environment file:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-4. Edit `.env` and set your database connection string. Generate a session secret with:
+Update `.env` with the connection details for your local PostgreSQL instance and a secure development session secret.
+
+You can generate a random secret with:
 
 ```powershell
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-Set the generated output as `SESSION_SECRET`. Example `.env` shape:
+Example configuration:
 
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/ngoconnect
-SESSION_SECRET=PASTE_YOUR_RANDOM_SECRET_HERE
+SESSION_SECRET=YOUR_GENERATED_SECRET
 NODE_ENV=development
 PORT=3000
 ```
 
-5. Create/update tables and indexes, then insert demo data:
+Replace the example values with your actual local configuration. Never commit real secrets.
+
+### 4. Prepare the database
 
 ```powershell
 npm run db:migrate
+```
+
+Seed sample records only if needed:
+
+```powershell
 npm run seed
 ```
 
-6. Start the backend in Terminal 1:
+### 5. Start the backend
+
+In Terminal 1:
 
 ```powershell
 npm run dev:backend
 ```
 
-7. Start the frontend in Terminal 2:
+### 6. Start the frontend
+
+In Terminal 2:
 
 ```powershell
 npm run dev:frontend
 ```
 
-Open <http://localhost:5173>.
-
-## Database
-
-The database layer uses `pg` directly—there is no ORM. All application SQL runs through a shared PostgreSQL connection pool and uses parameterized query values.
-
-The schema lives in `shared/db/schema.sql`. Running `npm run db:migrate` applies this idempotent SQL schema. This command creates required PostgreSQL enums, tables, indexes and the foreign key used by NGO verification metadata; it also adds missing NGO verification columns to an older compatible database.
-
-Main tables:
-
-- `users`
-- `ngos`
-- `resources`
-- `resource_requests`
-- `transactions`
-- `notifications`
-
-## Main Features
-
-- NGO registration and login
-- Resource listings and availability
-- NGO resource requests
-- Request acceptance/rejection and transaction tracking
-- Rule-based recommended matches
-- Notifications and read status
-- Admin dashboard and NGO verification status
+Open http://localhost:5173.
 
 ## Demo Accounts
 
-Seeded development accounts:
+The development seed script defines these demo accounts:
 
-```text
-admin@ngoconnect.demo
-ngo1@ngoconnect.demo
-ngo2@ngoconnect.demo
-ngo3@ngoconnect.demo
-donor1@ngoconnect.demo
-donor2@ngoconnect.demo
-```
+| Role | Email |
+|---|---|
+| Administrator | `admin@ngoconnect.demo` |
+| NGO | `ngo1@ngoconnect.demo` |
+| NGO | `ngo2@ngoconnect.demo` |
+| NGO | `ngo3@ngoconnect.demo` |
+| Donor | `donor1@ngoconnect.demo` |
+| Donor | `donor2@ngoconnect.demo` |
 
-The demo password is defined in `backend/src/seed.js` (`DemoPass123!`). These accounts are for local development only; do not use them in production.
+The current demo password is defined in `backend/src/seed.js`. These accounts are intended for local development only.
+
+Do not use demo credentials or seed data in a production environment.
 
 ## Useful Commands
 
-```powershell
-npm ci
-npm run db:migrate
-npm run seed
-npm run build
-npm run dev:backend
-npm run dev:frontend
-npm test --workspace=ngo-connect-api
-```
+| Command | Purpose |
+|---|---|
+| `npm ci` | Install dependencies from the lockfile |
+| `npm run docker:build` | Build the Docker development image |
+| `npm run dev` | Start the Docker development environment |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:seed:docker` | Explicitly seed demo data in Docker |
+| `npm run seed` | Seed data using the local backend workspace configuration |
+| `npm run build` | Build available workspaces |
+| `npm run dev:backend` | Run the backend locally |
+| `npm run dev:frontend` | Run the frontend locally |
+| `npm test --workspace=ngo-connect-api` | Run the backend test script |
 
-For Docker-based development, the main commands are:
+## Troubleshooting
+
+### Docker Desktop is not running
+
+Start Docker Desktop and wait until its engine is ready. Then retry:
 
 ```powershell
-docker build -t ngo-connect-ai:dev .
 npm run dev
 ```
 
-## Security
+### The Docker image is missing or outdated
 
-- `.env` and `.env.docker` are ignored by Git.
-- Never commit database passwords, session secrets, JWT secrets, or API keys.
-- SQL query values are passed as parameters rather than concatenated into SQL strings.
-- Docker-generated secrets are intended only for local development.
+Rebuild it:
+
+```powershell
+npm run docker:build
+```
+
+### The database is not ready
+
+Check the Compose services:
+
+```powershell
+docker compose --env-file .env.docker ps
+```
+
+Inspect database logs:
+
+```powershell
+docker compose --env-file .env.docker logs db
+```
+
+### The backend fails to start
+
+Inspect the backend logs:
+
+```powershell
+docker compose --env-file .env.docker logs backend
+```
+
+Check the setup logs:
+
+```powershell
+docker compose --env-file .env.docker logs setup
+```
+
+### Demo data is missing
+
+Starting the application does not seed demo data. Run:
+
+```powershell
+npm run db:seed:docker
+```
+
+### The `.env` file warning appears in Docker logs
+
+The local and Docker environment files are separate. The Docker setup supplies the database connection through the container environment. A message about a missing optional `.env` file does not necessarily mean the migration or seed operation failed; check the command's final exit status and output.
+
+## Security Notes
+
+- Never commit `.env`, `.env.docker`, passwords, API keys, or session secrets.
+- Use `.env.example` for placeholder configuration only.
+- Demo accounts and sample data are for local development only.
+- Keep database credentials out of source code and shell history.
+- Use parameterized SQL queries for database operations.
+- Do not use development secrets or demo credentials for a production deployment.
+
+## Contributing
+
+1. Create a branch for your changes.
+2. Keep changes focused and consistent with the existing project structure.
+3. Run the relevant checks before submitting changes.
+4. Update this README when setup commands, architecture, or development workflows change.
+
+---
+
+**NGOConnect AI** — connecting community needs with available resources.

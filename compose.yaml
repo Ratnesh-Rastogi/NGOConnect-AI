@@ -71,5 +71,24 @@ services:
         condition: service_started
     command: ["npm", "run", "dev", "--workspace=frontend"]
 
+
+  seed:
+    image: ngo-connect-ai:dev
+    profiles: ["tools"]
+    restart: "no"
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/ngoconnect
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: development
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./shared:/app/shared
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["npm", "run", "seed"]
+
+
 volumes:
   ngoconnect-db-data:
